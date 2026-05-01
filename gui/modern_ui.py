@@ -4,10 +4,10 @@ from tkinter import ttk, filedialog, messagebox
 import numpy as np
 from PIL import Image, ImageTk
 import threading
-from src.core.lpmode import LPMode
-from src.core.renderer import ImageRenderer
-from src.core.vector_mode import get_vector_modes, format_decomposition
-from src.core.phase_map import vortex_phase, blazed_grating, lp_phase_distribution
+from core.lpmode import LPMode
+from core.renderer import ImageRenderer
+from core.vector_mode import get_vector_modes, format_decomposition
+from core.phase_map import vortex_phase, blazed_grating, lp_phase_distribution
 
 # ── palette ───────────────────────────────────────────────────────────────────
 BG       = "#F5F7FA"  # window / panel background
@@ -114,18 +114,35 @@ def _spinbox_row(parent, label_text, var, from_=0, to=20, label_width=15, bg=CAR
     return sb
 
 
-def _radio_row(parent, label_text, var, choices, label_width=15, bg=CARD_BG):
-    """Horizontal radio-button row. selectcolor=BLUE so indicator matches theme."""
+def _radio_row(parent, label_text, var, choices, label_width=15, bg=CARD_BG,
+               use_default_color=False, btn_width=0, grid_parent=None, grid_row=0):
+    """Horizontal radio-button row. If grid_parent is given, uses grid layout for column alignment."""
+    if grid_parent is not None:
+        selectcolor = "systemButtonFace" if use_default_color else BLUE
+        tk.Label(grid_parent, text=label_text, bg=bg, fg=TEXT2,
+                 font=F_LABEL, anchor=tk.W).grid(row=grid_row, column=0, sticky=tk.W, padx=(0, 4), pady=(0, ROW))
+        btns = []
+        for col, (val, txt) in enumerate(choices):
+            b = tk.Radiobutton(grid_parent, text=txt, variable=var, value=val,
+                               bg=bg, fg=TEXT, activebackground=bg,
+                               selectcolor=selectcolor, relief=tk.FLAT, bd=0,
+                               highlightthickness=0, font=F_LABEL)
+            b.grid(row=grid_row, column=col + 1, sticky=tk.W, padx=(15
+            , 8), pady=(0, ROW))
+            btns.append(b)
+        return btns
     row = tk.Frame(parent, bg=bg)
     row.pack(fill=tk.X, pady=(0, ROW))
     tk.Label(row, text=label_text, bg=bg, fg=TEXT2,
              font=F_LABEL, width=label_width, anchor=tk.W).pack(side=tk.LEFT)
     btns = []
+    selectcolor = "systemButtonFace" if use_default_color else BLUE
     for val, txt in choices:
+        kw = dict(width=btn_width) if btn_width else {}
         b = tk.Radiobutton(row, text=txt, variable=var, value=val,
                            bg=bg, fg=TEXT, activebackground=bg,
-                           selectcolor=BLUE, relief=tk.FLAT, bd=0,
-                           highlightthickness=0, font=F_LABEL)
+                           selectcolor=selectcolor, relief=tk.FLAT, bd=0,
+                           highlightthickness=0, font=F_LABEL, **kw)
         b.pack(side=tk.LEFT, padx=(0, 8))
         btns.append(b)
     return btns
@@ -199,10 +216,15 @@ class FiberModeApp:
         self.root.title("Fiber Mode Visualization")
         self.root.geometry("1200x780")
         self.root.minsize(800, 560)
-        self.root.resizable(True, True)
+        self.root.resizable(False, False)
         self.root.configure(bg=BG)
+
+        # Set custom icon
         try:
-            self.root.iconbitmap(default='')
+            import os
+            icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app_icon.ico")
+            if os.path.exists(icon_path):
+                self.root.iconbitmap(icon_path)
         except Exception:
             pass
 
@@ -321,22 +343,29 @@ class FiberModeApp:
         # ── Display Options ──────────────────────────────────────────────────
         body = _sec_card(sf, "Display Options")
 
+        grid = tk.Frame(body, bg=CARD_BG)
+        grid.pack(fill=tk.X)
+
         self.colormap_var = tk.StringVar(value="jet")
         _radio_row(body, "Colormap", self.colormap_var,
-                   [("jet", "jet"), ("gray", "gray")])
+                   [("jet", "jet"), ("gray", "gray")], use_default_color=True,
+                   grid_parent=grid, grid_row=0)
 
         self.overlay_var = tk.StringVar(value="lp")
         self.overlay_var.trace_add("write", self._on_overlay_change)
         _radio_row(body, "Mode", self.overlay_var,
-                   [("lp", "LP"), ("vector", "Vector")])
+                   [("lp", "LP"), ("vector", "Vector")], use_default_color=True,
+                   grid_parent=grid, grid_row=1)
 
         self.parity_var = tk.StringVar(value="even")
         self._parity_btns = _radio_row(body, "Parity", self.parity_var,
-                                        [("even", "even"), ("odd", "odd")])
+                                        [("even", "even"), ("odd", "odd")], use_default_color=True,
+                                        grid_parent=grid, grid_row=2)
 
         self.pol_dir_var = tk.StringVar(value="x")
         self._pol_dir_btns = _radio_row(body, "Pol dir", self.pol_dir_var,
-                                         [("x", "x-pol"), ("y", "y-pol")])
+                                         [("x", "x-pol"), ("y", "y-pol")], use_default_color=True,
+                                         grid_parent=grid, grid_row=3)
 
         chk_row = tk.Frame(body, bg=CARD_BG)
         chk_row.pack(fill=tk.X, pady=(0, 4))
@@ -386,11 +415,11 @@ class FiberModeApp:
 
         outer_r, body_r = _bordered_card(parent, "Calculation Results")
         outer_r.grid(row=1, column=0, sticky="nsew")
-        self.info_text = tk.Text(body_r, height=7, font=F_MONO,
+        self.info_text = tk.Text(body_r, height=7, font=("Menlo", 10),
                                  relief=tk.FLAT, bd=0, state=tk.DISABLED,
                                  bg=MONO_BG, fg=TEXT,
                                  highlightthickness=0,
-                                 padx=6, pady=6)
+                                 padx=8, pady=8, spacing1=3, spacing3=3)
         self.info_text.pack(fill=tk.BOTH, expand=True)
 
     # ============================================================ PHASE TAB
@@ -427,7 +456,7 @@ class FiberModeApp:
         body = _sec_card(sf, "Phase Type")
         self.phase_type_var = tk.StringVar(value="lp")
         _radio_row(body, "Type", self.phase_type_var,
-                   [("lp", "LP Mode"), ("vortex", "Vortex")], label_width=10)
+                   [("lp", "LP Mode"), ("vortex", "Vortex")], label_width=10, use_default_color=True)
 
         # Parameters
         body = _sec_card(sf, "Parameters")
@@ -491,11 +520,11 @@ class FiberModeApp:
 
         outer_r, body_r = _bordered_card(parent, "Generation Results")
         outer_r.grid(row=1, column=0, sticky="nsew")
-        self.phase_info_text = tk.Text(body_r, height=7, font=F_MONO,
+        self.phase_info_text = tk.Text(body_r, height=7, font=("Menlo", 10),
                                        relief=tk.FLAT, bd=0, state=tk.DISABLED,
                                        bg=MONO_BG, fg=TEXT,
                                        highlightthickness=0,
-                                       padx=6, pady=6)
+                                       padx=8, pady=8, spacing1=3, spacing3=3)
         self.phase_info_text.pack(fill=tk.BOTH, expand=True)
 
     # ============================================================ LOGIC
@@ -570,6 +599,7 @@ class FiberModeApp:
                 vec_data["X_arrow"], vec_data["Y_arrow"],
                 colormap=colormap, size=(900, 240),
                 extent=vec_data["extent"], show_pol=show_pol,
+                gap_color=(250, 250, 250),
             )
         else:
             if show_pol:
@@ -592,15 +622,16 @@ class FiberModeApp:
         self.image_label.config(image=photo)
         self.image_label.image = photo
 
-        lines = [
-            f"LP Mode: LP{l}{m} ({self.parity_var.get()})", "",
+        is_vector = self.overlay_var.get() == "vector"
+        lines = [] if is_vector else [f"LP Mode: LP{l}{m} ({self.parity_var.get()})", ""]
+        lines += [
             f"V-number:    {v:.4f}",
             f"Roots found: {len(roots)}",
             f"Selected U:  {U:.4f}",
             f"Wavelength:  {self.params['wavelength']*1e9:.1f} nm",
             f"Core radius: {self.params['a']*1e6:.2f} μm",
         ]
-        if self.overlay_var.get() == "vector" and l >= 1:
+        if is_vector and l >= 1:
             lines += [""] + format_decomposition(l, m)
         self._set_info_text("\n".join(lines))
 
@@ -746,4 +777,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

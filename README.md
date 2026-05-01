@@ -23,10 +23,18 @@ A Python application for visualizing optical fiber modes and generating phase ma
 - **Phase Modulation**:
   - Phase rotation (angular modulation)
   - Blazed grating orders (fx, fy) for beam steering
-- **Colormap Options**:
-  - Phase gray: Linear mapping of 0-2π to 0-255 grayscale
-  - Gray: Wrapped phase visualization
 - **Export**: Save phase maps as PNG images
+
+
+## Examples
+
+
+![LP mode intensity](img/test1.png)
+
+
+![Vector mode decomposition](img/test2.png)
+
+![Phase map](img/test3.png)
 
 ## Requirements
 

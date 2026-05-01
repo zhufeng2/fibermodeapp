@@ -112,7 +112,8 @@ class ImageRenderer:
                          colormap: str = "jet",
                          size: tuple = (900, 240),
                          extent: float = 2.0,
-                         show_pol: bool = False) -> Image.Image:
+                         show_pol: bool = False,
+                         gap_color: tuple = (30, 30, 30)) -> Image.Image:
         """矢量模式 1×4 横排拼图，2× 超采样"""
         scale = 2
         n = len(modes)
@@ -120,13 +121,23 @@ class ImageRenderer:
         cell_h = size[1]
         scw, sch = cell_w * scale, cell_h * scale
 
-        try:
-            from PIL import ImageFont
-            font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 14 * scale)
-        except Exception:
-            font = None
+        font = None
+        for font_path in [
+            "C:/Windows/Fonts/arial.ttf",
+            "C:/Windows/Fonts/segoeui.ttf",
+            "/System/Library/Fonts/Helvetica.ttc",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        ]:
+            try:
+                from PIL import ImageFont
+                font = ImageFont.truetype(font_path, 26)
+                break
+            except Exception:
+                continue
 
-        canvas = Image.new('RGB', (cell_w * n, cell_h), color=(30, 30, 30))
+        gap = 4  # pixels between cells
+        canvas_w = cell_w * n + gap * (n - 1)
+        canvas = Image.new('RGB', (canvas_w, cell_h), color=gap_color)
 
         def phys_to_px(x: float, y: float) -> tuple:
             px = (x + extent) / (2 * extent) * scw
@@ -151,7 +162,7 @@ class ImageRenderer:
                 draw2.text((12, 10), title, fill=(255, 255, 255))
 
             cell_img = cell_img.resize((cell_w, cell_h), Image.Resampling.LANCZOS)
-            canvas.paste(cell_img, (idx * cell_w, 0))
+            canvas.paste(cell_img, (idx * (cell_w + gap), 0))
 
         return canvas
 

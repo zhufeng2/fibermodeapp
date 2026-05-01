@@ -103,5 +103,3 @@ def lp_phase_distribution(size: str, l: int, n_x: int = 100, n_y: int = 0,
         2 * np.pi
     )
     return phase_dis
-
-

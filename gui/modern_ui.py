@@ -221,8 +221,9 @@ class FiberModeApp:
 
         # Set custom icon
         try:
-            import os
-            icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app_icon.ico")
+            import os, sys
+            base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            icon_path = os.path.join(base, "app_icon.ico")
             if os.path.exists(icon_path):
                 self.root.iconbitmap(icon_path)
         except Exception:

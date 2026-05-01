@@ -24,6 +24,8 @@ args = [
     "--workpath=" + BUILD_DIR,
     "--specpath=" + PROJECT_DIR,
     "--noupx",
+    "--icon=" + os.path.join(PROJECT_DIR, "app_icon.ico"),
+    "--add-data=" + os.path.join(PROJECT_DIR, "app_icon.ico") + os.pathsep + ".",
     # 只排除完全独立、确认不被 scipy 内部依赖的模块
     "--exclude-module=matplotlib",
     "--exclude-module=pandas",

@@ -629,7 +629,7 @@ class FiberModeApp:
             f"Roots found: {len(roots)}",
             f"Selected U:  {U:.4f}",
             f"Wavelength:  {self.params['wavelength']*1e9:.1f} nm",
-            f"Core radius: {self.params['a']*1e6:.2f} μm",
+            f"Core radius: {self.params['a']*1e6:.2f} um",
         ]
         if is_vector and l >= 1:
             lines += [""] + format_decomposition(l, m)

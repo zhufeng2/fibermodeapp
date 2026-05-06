@@ -98,8 +98,9 @@ def lp_phase_distribution(size: str, l: int, n_x: int = 100, n_y: int = 0,
     gy = n_y / V
     angle_rad = np.deg2rad(phase_angle)
 
+    #映射到[-pi,pi]
     phase_dis = np.mod(
         np.angle(np.cos(l * Phis + np.pi/2 + angle_rad)) + np.pi * 2 * (gx * Xs + gy * Ys),
         2 * np.pi
-    )
+    )-np.pi
     return phase_dis
